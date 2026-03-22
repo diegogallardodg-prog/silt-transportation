@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 
 const weightOptions = [
   { value: "", label: "Select estimated weight..." },
@@ -16,6 +17,7 @@ export default function Contact() {
     handleSubmit,
     formState: { errors },
   } = useForm();
+  const animRef = useScrollAnimation();
 
   const onSubmit = (data) => {
     console.log("Quote request:", data);
@@ -39,9 +41,9 @@ export default function Contact() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+        <div ref={animRef} className="grid grid-cols-1 lg:grid-cols-5 gap-12">
           {/* Left: Contact Info */}
-          <div className="lg:col-span-2 flex flex-col gap-8">
+          <div className="animate-item lg:col-span-2 flex flex-col gap-8">
             <div>
               <h3 className="font-display font-bold text-xl text-white mb-6">
                 Contact Us Directly
@@ -97,7 +99,7 @@ export default function Contact() {
           </div>
 
           {/* Right: Form */}
-          <div className="lg:col-span-3">
+          <div className="animate-item lg:col-span-3">
             {submitted ? (
               <div className="bg-accent/10 border border-accent/30 p-10 text-center flex flex-col items-center gap-4 h-full justify-center">
                 <div className="text-5xl">✅</div>

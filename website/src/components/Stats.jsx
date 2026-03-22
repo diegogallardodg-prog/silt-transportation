@@ -1,13 +1,30 @@
 import { useEffect, useRef, useState } from "react";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 
 const stats = [
-  { value: 2.4, suffix: "M", label: "Miles Delivered", decimals: 1 },
-  { value: 847, suffix: "K", label: "Tons Moved", decimals: 0 },
-  { value: 23, suffix: "", label: "Years Experience", decimals: 0 },
-  { value: 100, suffix: "%", label: "Safety Record", decimals: 0 },
+  {
+    raw: 2400000,
+    format: (n) => (n >= 1000000 ? (n / 1000000).toFixed(1) + "M" : Math.floor(n).toLocaleString()),
+    label: "Miles Delivered",
+  },
+  {
+    raw: 847000,
+    format: (n) => (n >= 1000 ? Math.floor(n / 1000) + "K" : Math.floor(n).toLocaleString()),
+    label: "Tons Moved",
+  },
+  {
+    raw: 23,
+    format: (n) => Math.floor(n).toString(),
+    label: "Years Experience",
+  },
+  {
+    raw: 100,
+    format: (n) => Math.floor(n) + "%",
+    label: "Safety Record",
+  },
 ];
 
-function useCountUp(target, decimals, duration, start) {
+function useCountUp(target, duration, start) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -17,22 +34,21 @@ function useCountUp(target, decimals, duration, start) {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(parseFloat((eased * target).toFixed(decimals)));
+      setCount(eased * target);
       if (progress < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
-  }, [start, target, decimals, duration]);
+  }, [start, target, duration]);
 
   return count;
 }
 
 function StatItem({ stat, started }) {
-  const count = useCountUp(stat.value, stat.decimals, 2000, started);
+  const count = useCountUp(stat.raw, 2000, started);
   return (
-    <div className="flex flex-col items-center text-center px-8 py-6 relative">
+    <div className="animate-item flex flex-col items-center text-center px-8 py-6 relative">
       <span className="font-display font-bold text-6xl md:text-7xl text-accent tabular-nums leading-none">
-        {stat.decimals > 0 ? count.toFixed(stat.decimals) : Math.floor(count)}
-        {stat.suffix}
+        {stat.format(count)}
       </span>
       <span className="text-muted text-sm font-medium tracking-widest uppercase mt-3">
         {stat.label}
@@ -44,6 +60,7 @@ function StatItem({ stat, started }) {
 export default function Stats() {
   const sectionRef = useRef(null);
   const [started, setStarted] = useState(false);
+  const animRef = useScrollAnimation();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -73,7 +90,7 @@ export default function Stats() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border border-white/10">
+        <div ref={animRef} className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border border-white/10">
           {stats.map((stat, i) => (
             <div key={stat.label} className={i > 0 ? "border-t md:border-t-0 border-white/10" : ""}>
               <StatItem stat={stat} started={started} />

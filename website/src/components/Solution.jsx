@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -15,28 +16,15 @@ const features = [
 
 export default function Solution() {
   const sectionRef = useRef(null);
-  const textRef = useRef(null);
-  const mapRef = useRef(null);
   const routeRef = useRef(null);
   const [animated, setAnimated] = useState(false);
+  const animRef = useScrollAnimation();
 
   useEffect(() => {
     const trigger = ScrollTrigger.create({
       trigger: sectionRef.current,
       start: "top 65%",
-      onEnter: () => {
-        setAnimated(true);
-        gsap.fromTo(
-          textRef.current,
-          { opacity: 0, x: -40 },
-          { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" }
-        );
-        gsap.fromTo(
-          mapRef.current,
-          { opacity: 0, x: 40 },
-          { opacity: 1, x: 0, duration: 0.8, ease: "power2.out", delay: 0.2 }
-        );
-      },
+      onEnter: () => setAnimated(true),
     });
     return () => trigger.kill();
   }, []);
@@ -55,9 +43,9 @@ export default function Solution() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div ref={animRef} className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left: Text */}
-          <div ref={textRef} style={{ opacity: 0 }}>
+          <div className="animate-item">
             <p className="text-white/70 text-lg leading-relaxed mb-8">
               Every oversized move starts with our precision route planning process.
               We combine AI-powered analysis with decades of field experience to map
@@ -93,11 +81,7 @@ export default function Solution() {
           </div>
 
           {/* Right: Animated Map */}
-          <div
-            ref={mapRef}
-            style={{ opacity: 0 }}
-            className="bg-card border border-white/10 p-6 relative overflow-hidden"
-          >
+          <div className="animate-item bg-card border border-white/10 p-6 relative overflow-hidden">
             <div className="absolute top-4 left-4 text-xs text-muted font-mono tracking-wide uppercase">
               Route Planner — Live View
             </div>

@@ -1,8 +1,4 @@
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 
 const trucks = [
   {
@@ -60,30 +56,10 @@ const trucks = [
 ];
 
 export default function Fleet() {
-  const sectionRef = useRef(null);
-  const cardsRef = useRef([]);
-
-  useEffect(() => {
-    const cards = cardsRef.current.filter(Boolean);
-    gsap.fromTo(
-      cards,
-      { opacity: 0, y: 60 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.7,
-        stagger: 0.15,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 65%",
-        },
-      }
-    );
-  }, []);
+  const animRef = useScrollAnimation();
 
   return (
-    <section ref={sectionRef} id="fleet" className="py-24 px-6 bg-bg">
+    <section id="fleet" className="py-24 px-6 bg-bg">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
@@ -99,13 +75,11 @@ export default function Fleet() {
         </div>
 
         {/* Truck Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-          {trucks.map((truck, i) => (
+        <div ref={animRef} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          {trucks.map((truck) => (
             <div
               key={truck.name}
-              ref={(el) => (cardsRef.current[i] = el)}
-              style={{ opacity: 0 }}
-              className={`bg-card border border-white/10 hover:border-accent/50 transition-all duration-300 group flex flex-col overflow-hidden`}
+              className={`animate-item bg-card border border-white/10 hover:border-accent/50 transition-all duration-300 group flex flex-col overflow-hidden`}
             >
               {/* Image area */}
               <div className={`h-48 bg-gradient-to-br ${truck.color} border-b border-white/10 flex flex-col items-center justify-center relative overflow-hidden`}>

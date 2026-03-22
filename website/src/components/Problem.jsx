@@ -1,8 +1,4 @@
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 
 const loads = [
   {
@@ -44,30 +40,10 @@ const loads = [
 ];
 
 export default function Problem() {
-  const sectionRef = useRef(null);
-  const cardsRef = useRef([]);
-
-  useEffect(() => {
-    const cards = cardsRef.current.filter(Boolean);
-    gsap.fromTo(
-      cards,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 70%",
-        },
-      }
-    );
-  }, []);
+  const animRef = useScrollAnimation();
 
   return (
-    <section ref={sectionRef} className="py-24 px-6 bg-bg">
+    <section className="py-24 px-6 bg-bg">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
@@ -84,13 +60,11 @@ export default function Problem() {
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {loads.map((load, i) => (
+        <div ref={animRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {loads.map((load) => (
             <div
               key={load.title}
-              ref={(el) => (cardsRef.current[i] = el)}
-              style={{ opacity: 0 }}
-              className="bg-card border border-white/10 p-6 hover:border-accent/40 hover:bg-white/5 transition-all duration-300 group"
+              className="animate-item bg-card border border-white/10 p-6 hover:border-accent/40 hover:bg-white/5 transition-all duration-300 group"
             >
               <div className="text-4xl mb-4">{load.icon}</div>
               <h3 className="font-display font-bold text-xl text-white mb-2 group-hover:text-accent transition-colors">

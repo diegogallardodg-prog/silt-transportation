@@ -1,50 +1,28 @@
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
+import { useRef, Suspense } from "react";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
+import TruckScene from "./TruckScene";
 
 export default function Hero() {
-  const headlineRef = useRef(null);
-  const subRef = useRef(null);
-  const buttonsRef = useRef(null);
   const scrollRef = useRef(null);
-
-  useEffect(() => {
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-    tl.fromTo(
-      headlineRef.current,
-      { opacity: 0, y: 60 },
-      { opacity: 1, y: 0, duration: 1 }
-    )
-      .fromTo(
-        subRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.8 },
-        "-=0.5"
-      )
-      .fromTo(
-        buttonsRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6 },
-        "-=0.4"
-      )
-      .fromTo(
-        scrollRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.5 },
-        "-=0.2"
-      );
-  }, []);
+  const animRef = useScrollAnimation({ start: "top 100%" });
 
   return (
     <section
       id="services"
       className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden"
-      style={{
-        background: "#0a0a0a",
-      }}
+      style={{ background: "#0a0a0a" }}
     >
+      {/* 3D Truck Scene */}
+      <div className="absolute inset-0 z-0">
+        <TruckScene />
+      </div>
+
+      {/* Dark overlay between 3D and text */}
+      <div className="absolute inset-0 z-[1] bg-gradient-to-r from-bg via-bg/80 to-transparent" />
+
       {/* Grid overlay */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 z-[2] pointer-events-none"
         style={{
           backgroundImage: `
             linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
@@ -56,15 +34,15 @@ export default function Hero() {
 
       {/* Radial gradient accent */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 z-[2] pointer-events-none"
         style={{
           background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0,255,136,0.06) 0%, transparent 70%)",
         }}
       />
 
       {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto">
-        <div ref={headlineRef} style={{ opacity: 0 }}>
+      <div ref={animRef} className="relative z-10 max-w-5xl mx-auto">
+        <div className="animate-item">
           <p className="font-display text-accent text-sm font-semibold tracking-[0.4em] uppercase mb-6">
             Heavy Haul Specialists
           </p>
@@ -75,21 +53,13 @@ export default function Hero() {
           </h1>
         </div>
 
-        <p
-          ref={subRef}
-          style={{ opacity: 0 }}
-          className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto mt-6 mb-10 leading-relaxed"
-        >
+        <p className="animate-item text-white/60 text-lg md:text-xl max-w-2xl mx-auto mt-6 mb-10 leading-relaxed">
           Heavy haul. Specialized freight. Oversized loads.
           <br />
           <span className="text-white/80 font-medium">We move what others can't.</span>
         </p>
 
-        <div
-          ref={buttonsRef}
-          style={{ opacity: 0 }}
-          className="flex flex-col sm:flex-row gap-4 items-center justify-center"
-        >
+        <div className="animate-item flex flex-col sm:flex-row gap-4 items-center justify-center">
           <a
             href="#contact"
             className="bg-accent text-black font-bold px-8 py-4 text-lg hover:scale-105 hover:bg-accent/90 transition-all duration-200 active:scale-95 pulse-glow min-w-[200px]"
@@ -108,8 +78,7 @@ export default function Hero() {
       {/* Scroll indicator */}
       <div
         ref={scrollRef}
-        style={{ opacity: 0 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce-slow"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce-slow z-10"
       >
         <span className="text-white/30 text-xs tracking-[0.3em] font-medium">SCROLL</span>
         <svg
