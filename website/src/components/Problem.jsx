@@ -1,81 +1,92 @@
-import { useScrollAnimation } from "../hooks/useScrollAnimation";
+import { useRef } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const loads = [
   {
-    icon: "⚙️",
-    title: "Industrial Machinery",
-    desc: "Turbines, compressors, and heavy manufacturing equipment requiring precision transport.",
-    spec: "Up to 500,000 lbs / 200ft+",
+    emoji: '🏗️',
+    title: 'Heavy Industrial Equipment',
+    desc: 'Cranes, excavators, and processing units that exceed standard limits.',
   },
   {
-    icon: "🌉",
-    title: "Bridge Beams",
-    desc: "200ft steel spans and pre-stressed concrete girders for major infrastructure projects.",
-    spec: "200ft spans / 150,000 lbs",
+    emoji: '💨',
+    title: 'Wind Turbine Components',
+    desc: 'Oversized blades and nacelles requiring specialized routing and escorts.',
   },
   {
-    icon: "💨",
-    title: "Wind Turbine Blades",
-    desc: "150ft+ rotor blades for wind energy installations across complex terrain.",
-    spec: "150ft+ / 30,000 lbs each",
+    emoji: '🌉',
+    title: 'Bridge Beams & Steel',
+    desc: 'Long structural steel and precast concrete beams up to 200 ft.',
   },
   {
-    icon: "⚡",
-    title: "Power Transformers",
-    desc: "Utility-grade high-voltage transformers for grid infrastructure and substations.",
-    spec: "Up to 300,000 lbs",
+    emoji: '⛏️',
+    title: 'Mining Machinery',
+    desc: 'Haul trucks, draglines, and mining equipment in full assemblies.',
   },
   {
-    icon: "🏗️",
-    title: "Modular Buildings",
-    desc: "Full building modules, prefab structures, and oversized construction components.",
-    spec: "Custom dims / 100,000 lbs+",
+    emoji: '⚡',
+    title: 'Power Generation Units',
+    desc: 'Transformers, generators, and turbine components for energy projects.',
   },
   {
-    icon: "🚀",
-    title: "Aerospace Components",
-    desc: "Rocket sections, fuselage assemblies, and sensitive aerospace hardware.",
-    spec: "Precision handling / Any size",
+    emoji: '🏢',
+    title: 'Modular Buildings',
+    desc: 'Factory-built structures and prefab modules moved intact to site.',
   },
 ];
 
 export default function Problem() {
-  const animRef = useScrollAnimation();
+  const sectionRef = useRef(null);
+
+  useGSAP(() => {
+    gsap.from('.problem-card', {
+      y: 60,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.1,
+      scrollTrigger: {
+        trigger: '.problem-wrapper',
+        start: 'top 80%',
+      },
+    });
+  });
 
   return (
-    <section className="py-24 px-6 bg-bg">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <p className="font-display text-accent text-sm font-semibold tracking-[0.4em] uppercase mb-4">
-            What We Handle
-          </p>
-          <h2 className="font-display font-bold text-4xl md:text-6xl text-white">
-            THE IMPOSSIBLE.{" "}
-            <span className="text-accent">SOLVED.</span>
-          </h2>
-          <p className="text-muted mt-4 max-w-xl mx-auto text-base">
-            When standard carriers say no, Silt Transportation says let's find a way.
-          </p>
-        </div>
-
-        {/* Cards Grid */}
-        <div ref={animRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {loads.map((load) => (
+    <section className="problem-wrapper py-24 px-6" style={{ background: '#0a0a0a' }} ref={sectionRef}>
+      <div className="max-w-6xl mx-auto">
+        <h2
+          className="text-4xl md:text-5xl font-bold text-center mb-4"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+        >
+          The Loads Nobody Else Will Touch
+        </h2>
+        <p className="text-center mb-16" style={{ color: '#888888' }}>
+          We specialize in freight that standard carriers turn away.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {loads.map((item) => (
             <div
-              key={load.title}
-              className="animate-item bg-card border border-white/10 p-6 hover:border-accent/40 hover:bg-white/5 transition-all duration-300 group"
+              key={item.title}
+              className="problem-card p-6 rounded-lg"
+              style={{
+                background: '#1a1a1a',
+                border: '1px solid #333',
+                transition: 'border-color 0.3s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00ff88'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#333'; }}
             >
-              <div className="text-4xl mb-4">{load.icon}</div>
-              <h3 className="font-display font-bold text-xl text-white mb-2 group-hover:text-accent transition-colors">
-                {load.title}
+              <div className="text-4xl mb-4">{item.emoji}</div>
+              <h3
+                className="text-xl font-bold mb-2"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              >
+                {item.title}
               </h3>
-              <p className="text-muted text-sm leading-relaxed mb-4">{load.desc}</p>
-              <div className="border-t border-white/10 pt-3">
-                <span className="text-accent text-xs font-mono font-semibold tracking-wide">
-                  {load.spec}
-                </span>
-              </div>
+              <p style={{ color: '#888888', fontSize: '0.95rem' }}>{item.desc}</p>
             </div>
           ))}
         </div>

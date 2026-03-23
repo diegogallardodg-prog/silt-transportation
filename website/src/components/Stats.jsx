@@ -1,119 +1,74 @@
-import { useEffect, useRef, useState } from "react";
-import { useScrollAnimation } from "../hooks/useScrollAnimation";
+import { useRef } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const stats = [
-  {
-    raw: 2400000,
-    format: (n) => (n >= 1000000 ? (n / 1000000).toFixed(1) + "M" : Math.floor(n).toLocaleString()),
-    label: "Miles Delivered",
-  },
-  {
-    raw: 847000,
-    format: (n) => (n >= 1000 ? Math.floor(n / 1000) + "K" : Math.floor(n).toLocaleString()),
-    label: "Tons Moved",
-  },
-  {
-    raw: 23,
-    format: (n) => Math.floor(n).toString(),
-    label: "Years Experience",
-  },
-  {
-    raw: 100,
-    format: (n) => Math.floor(n) + "%",
-    label: "Safety Record",
-  },
+  { value: 2.4, suffix: 'M', label: 'Miles Hauled', decimals: 1 },
+  { value: 847, suffix: 'K', label: 'Tons Transported', decimals: 0 },
+  { value: 23, suffix: '', label: 'Years in Business', decimals: 0 },
+  { value: 100, suffix: '%', label: 'Safety Record', decimals: 0 },
 ];
 
-function useCountUp(target, duration, start) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!start) return;
-    let startTime = null;
-    const step = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(eased * target);
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [start, target, duration]);
-
-  return count;
-}
-
-function StatItem({ stat, started }) {
-  const count = useCountUp(stat.raw, 2000, started);
-  return (
-    <div className="animate-item flex flex-col items-center text-center px-8 py-6 relative">
-      <span className="font-display font-bold text-6xl md:text-7xl text-accent tabular-nums leading-none">
-        {stat.format(count)}
-      </span>
-      <span className="text-muted text-sm font-medium tracking-widest uppercase mt-3">
-        {stat.label}
-      </span>
-    </div>
-  );
-}
-
 export default function Stats() {
-  const sectionRef = useRef(null);
-  const [started, setStarted] = useState(false);
-  const animRef = useScrollAnimation();
+  const numbersRef = useRef([]);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !started) {
-          setStarted(true);
-        }
+  useGSAP(() => {
+    stats.forEach((stat, i) => {
+      const el = numbersRef.current[i];
+      if (!el) return;
+
+      const obj = { val: 0 };
+      gsap.to(obj, {
+        val: stat.value,
+        duration: 2,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: '.stats-wrapper',
+          start: 'top 80%',
+          once: true,
+        },
+        onUpdate() {
+          el.textContent =
+            stat.decimals > 0
+              ? obj.val.toFixed(stat.decimals) + stat.suffix
+              : Math.floor(obj.val) + stat.suffix;
+        },
+      });
+    });
+
+    gsap.from('.stat-item', {
+      y: 40,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.12,
+      scrollTrigger: {
+        trigger: '.stats-wrapper',
+        start: 'top 80%',
       },
-      { threshold: 0.3 }
-    );
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, [started]);
+    });
+  });
 
   return (
     <section
-      ref={sectionRef}
-      className="py-24 px-6 bg-[#0d0d0d] border-y border-white/10"
+      className="stats-wrapper py-24 px-6"
+      style={{ background: '#111111', borderTop: '1px solid #1e1e1e', borderBottom: '1px solid #1e1e1e' }}
     >
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12">
-          <p className="font-display text-accent text-sm font-semibold tracking-[0.4em] uppercase mb-4">
-            By The Numbers
-          </p>
-          <h2 className="font-display font-bold text-4xl md:text-5xl text-white">
-            PROVEN AT SCALE
-          </h2>
-        </div>
-
-        <div ref={animRef} className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 border border-white/10">
-          {stats.map((stat, i) => (
-            <div key={stat.label} className={i > 0 ? "border-t md:border-t-0 border-white/10" : ""}>
-              <StatItem stat={stat} started={started} />
-            </div>
-          ))}
-        </div>
-
-        {/* DOT badges */}
-        <div className="flex flex-wrap gap-4 justify-center mt-10">
-          {[
-            "FMCSA Registered",
-            "DOT Compliant",
-            "OSHA Certified",
-            "Fully Insured",
-          ].map((badge) => (
-            <span
-              key={badge}
-              className="border border-white/20 text-white/50 text-xs font-mono px-4 py-2 tracking-wide"
+      <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-10 text-center">
+        {stats.map((stat, i) => (
+          <div key={stat.label} className="stat-item">
+            <div
+              className="text-5xl md:text-6xl font-bold mb-2"
+              style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#00ff88' }}
+              ref={(el) => (numbersRef.current[i] = el)}
             >
-              {badge}
-            </span>
-          ))}
-        </div>
+              0{stat.suffix}
+            </div>
+            <p style={{ color: '#888888', fontSize: '0.95rem' }}>{stat.label}</p>
+          </div>
+        ))}
       </div>
     </section>
   );

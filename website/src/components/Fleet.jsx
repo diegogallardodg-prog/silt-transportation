@@ -1,120 +1,111 @@
-import { useScrollAnimation } from "../hooks/useScrollAnimation";
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const trucks = [
   {
-    name: "FLATBED",
-    tagline: "The workhorse",
-    icon: "🚛",
-    specs: [
-      { label: "Max Weight", value: "48,000 lbs" },
-      { label: "Length", value: "48 ft" },
-      { label: "Width", value: "8.5 ft" },
-      { label: "Height", value: "Unlimited" },
-    ],
-    desc: "Standard flatbed for machinery, steel, lumber, and general oversized freight.",
-    color: "from-white/5 to-transparent",
+    label: 'FLATBED',
+    name: 'Flatbed',
+    specs: ["48' standard deck", 'Up to 48,000 lbs', '8.5\' max width', 'Standard height clearance'],
+    color: '#00ff88',
   },
   {
-    name: "LOWBOY",
-    tagline: "Low clearance master",
-    icon: "🚚",
-    specs: [
-      { label: "Max Weight", value: "80,000 lbs" },
-      { label: "Length", value: "53 ft" },
-      { label: "Width", value: "8.5 ft" },
-      { label: "Height", value: "Low clearance" },
-    ],
-    desc: "Ideal for construction equipment, excavators, and loads requiring low deck height.",
-    color: "from-accent/5 to-transparent",
+    label: 'LOWBOY',
+    name: 'Lowboy',
+    specs: ['Drop-deck design', 'Up to 80,000 lbs', '18" deck height', 'Ideal for tall machinery'],
+    color: '#00ff88',
   },
   {
-    name: "EXTENDABLE",
-    tagline: "No length limit",
-    icon: "🚜",
-    specs: [
-      { label: "Max Weight", value: "120,000 lbs" },
-      { label: "Length", value: "80 ft+" },
-      { label: "Width", value: "8.5 ft" },
-      { label: "Height", value: "Modular" },
-    ],
-    desc: "Telescoping deck for wind turbine blades, bridge beams, and ultra-long loads.",
-    color: "from-white/5 to-transparent",
+    label: 'EXTENDABLE',
+    name: 'Extendable Flatbed',
+    specs: ["Extends to 80'", 'Up to 50,000 lbs', 'Adjustable length', 'Long structural loads'],
+    color: '#00ff88',
   },
   {
-    name: "MULTI-AXLE",
-    tagline: "No weight limit",
-    icon: "🏗️",
-    specs: [
-      { label: "Max Weight", value: "200,000 lbs+" },
-      { label: "Length", value: "Custom" },
-      { label: "Width", value: "Custom" },
-      { label: "Height", value: "Custom" },
-    ],
-    desc: "Specialized multi-axle configurations for industrial equipment and extreme heavy haul.",
-    color: "from-accent/5 to-transparent",
+    label: 'MULTI-AXLE',
+    name: 'Multi-Axle',
+    specs: ['Custom configurations', '200,000+ lbs capacity', 'Variable axle spread', 'Superloads & oversize'],
+    color: '#00ff88',
   },
 ];
 
 export default function Fleet() {
-  const animRef = useScrollAnimation();
+  useGSAP(() => {
+    gsap.from('.fleet-card', {
+      y: 60,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.1,
+      scrollTrigger: {
+        trigger: '.fleet-wrapper',
+        start: 'top 80%',
+      },
+    });
+  });
 
   return (
-    <section id="fleet" className="py-24 px-6 bg-bg">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <p className="font-display text-accent text-sm font-semibold tracking-[0.4em] uppercase mb-4">
-            Equipment
-          </p>
-          <h2 className="font-display font-bold text-4xl md:text-6xl text-white">
-            THE <span className="text-accent">FLEET</span>
-          </h2>
-          <p className="text-muted mt-4 max-w-xl mx-auto text-base">
-            Purpose-built for every oversized challenge. Maintained to the highest standard.
-          </p>
-        </div>
-
-        {/* Truck Cards */}
-        <div ref={animRef} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    <section className="fleet-wrapper py-24 px-6" style={{ background: '#0a0a0a' }}>
+      <div className="max-w-6xl mx-auto">
+        <h2
+          className="text-4xl md:text-5xl font-bold text-center mb-4"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+        >
+          Our Fleet
+        </h2>
+        <p className="text-center mb-16" style={{ color: '#888888' }}>
+          Matched to your load, every time.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {trucks.map((truck) => (
             <div
               key={truck.name}
-              className={`animate-item bg-card border border-white/10 hover:border-accent/50 transition-all duration-300 group flex flex-col overflow-hidden`}
+              className="fleet-card rounded-lg overflow-hidden"
+              style={{ background: '#1a1a1a', border: '1px solid #333' }}
             >
-              {/* Image area */}
-              <div className={`h-48 bg-gradient-to-br ${truck.color} border-b border-white/10 flex flex-col items-center justify-center relative overflow-hidden`}>
-                <div className="text-6xl mb-2">{truck.icon}</div>
-                <span className="font-display font-bold text-2xl text-white/20 absolute bottom-3 right-4 tracking-widest">
-                  {truck.name}
+              {/* Placeholder image */}
+              <div
+                style={{
+                  height: '160px',
+                  background: '#242424',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderBottom: '1px solid #333',
+                }}
+              >
+                <span
+                  style={{
+                    color: '#444',
+                    fontSize: '0.75rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.15em',
+                    fontFamily: 'Space Grotesk, sans-serif',
+                  }}
+                >
+                  {truck.label}
                 </span>
               </div>
-
-              {/* Content */}
-              <div className="p-5 flex flex-col flex-1">
-                <div className="mb-3">
-                  <h3 className="font-display font-bold text-xl text-white group-hover:text-accent transition-colors">
-                    {truck.name}
-                  </h3>
-                  <p className="text-muted text-xs font-medium tracking-wide uppercase mt-0.5">
-                    {truck.tagline}
-                  </p>
-                </div>
-
-                <p className="text-white/50 text-sm leading-relaxed mb-4">{truck.desc}</p>
-
-                {/* Specs Table */}
-                <div className="border border-white/10 divide-y divide-white/10 mb-4 flex-1">
+              <div className="p-5">
+                <h3
+                  className="text-lg font-bold mb-3"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#00ff88' }}
+                >
+                  {truck.name}
+                </h3>
+                <ul className="space-y-1">
                   {truck.specs.map((spec) => (
-                    <div key={spec.label} className="flex justify-between px-3 py-2">
-                      <span className="text-muted text-xs">{spec.label}</span>
-                      <span className="text-white text-xs font-semibold font-mono">{spec.value}</span>
-                    </div>
+                    <li
+                      key={spec}
+                      className="flex items-center gap-2 text-sm"
+                      style={{ color: '#aaaaaa' }}
+                    >
+                      <span style={{ color: '#00ff88', fontSize: '0.6rem' }}>▶</span>
+                      {spec}
+                    </li>
                   ))}
-                </div>
-
-                <button className="w-full border border-accent/50 text-accent text-sm font-bold py-2.5 hover:bg-accent hover:text-black transition-all duration-200 mt-auto">
-                  VIEW SPECS
-                </button>
+                </ul>
               </div>
             </div>
           ))}

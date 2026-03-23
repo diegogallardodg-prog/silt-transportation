@@ -1,16 +1,14 @@
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import Problem from "./components/Problem";
-import Solution from "./components/Solution";
-import Fleet from "./components/Fleet";
-import Stats from "./components/Stats";
-import Contact from "./components/Contact";
-import Footer from "./components/Footer";
+import Hero from './components/Hero';
+import Problem from './components/Problem';
+import Solution from './components/Solution';
+import Fleet from './components/Fleet';
+import Stats from './components/Stats';
+import Contact from './components/Contact';
+import Footer from './components/Footer';
 
 export default function App() {
   return (
-    <div className="bg-bg min-h-screen">
-      <Navbar />
+    <main>
       <Hero />
       <Problem />
       <Solution />
@@ -18,6 +16,6 @@ export default function App() {
       <Stats />
       <Contact />
       <Footer />
-    </div>
+    </main>
   );
 }
