@@ -189,6 +189,21 @@ body.loaded #loader{opacity:0;pointer-events:none;}
 .status-dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:blink 1.4s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
+/* WIREFRAME TRANSFORM SECTION */
+#transform-wrapper{position:relative;height:300vh;}
+#transform-section{position:sticky;top:0;width:100%;height:100vh;overflow:hidden;background:#05060A;}
+#transform-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.transform-overlay{position:absolute;inset:0;display:flex;align-items:center;pointer-events:none;}
+.transform-text-col{position:relative;padding:0 56px 0 72px;width:46%;}
+.transform-text-item{position:absolute;top:50%;left:72px;right:0;transform:translateY(-50%);opacity:0;transition:opacity .65s ease;}
+.transform-text-item.active{opacity:1;}
+.transform-headline{font-family:'Bebas Neue',cursive;font-size:clamp(2.8rem,5vw,5.5rem);line-height:.97;letter-spacing:.02em;color:#EDF0F7;}
+.transform-headline .red{color:#E8000A;}
+.transform-sub{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.16em;color:rgba(255,214,0,.65);margin-top:1rem;}
+.transform-progress-line{position:absolute;left:28px;top:0;bottom:0;width:2px;background:rgba(232,0,10,.12);}
+.transform-progress-fill{position:absolute;bottom:0;left:0;width:100%;height:0%;background:#E8000A;box-shadow:0 0 8px rgba(232,0,10,.5);}
+.transform-progress-label{position:absolute;bottom:36px;left:56px;font-family:'IBM Plex Mono',monospace;font-size:.56rem;letter-spacing:.14em;color:rgba(232,0,10,.55);}
+
 /* MOBILE */
 @media(max-width:960px){
   #nav{padding:0 20px;}
@@ -342,6 +357,37 @@ body.loaded #loader{opacity:0;pointer-events:none;}
     <span class="ticker-item">FLATBED TRANSPORT</span><span class="ticker-sep">◆</span>
     <span class="ticker-item">30 YEARS OF SERVICE</span><span class="ticker-sep">◆</span>
     <span class="ticker-item">71 LICENSED DRIVERS</span><span class="ticker-sep">◆</span>
+  </div>
+</div>
+
+<!-- WIREFRAME TRANSFORM SECTION -->
+<div id="transform-wrapper">
+  <div id="transform-section">
+    <canvas id="transform-canvas"></canvas>
+    <div class="transform-overlay">
+      <div class="transform-text-col">
+        <div class="transform-text-item active" data-tf-idx="0">
+          <div class="transform-headline">WE MOVE WHAT<br><span class="red">OTHERS CAN'T.</span></div>
+          <div class="transform-sub">// SCROLL TO REVEAL</div>
+        </div>
+        <div class="transform-text-item" data-tf-idx="1">
+          <div class="transform-headline">52 UNITS.<br><span class="red">COAST TO</span><br>COAST.</div>
+          <div class="transform-sub">// FLEET IN MOTION</div>
+        </div>
+        <div class="transform-text-item" data-tf-idx="2">
+          <div class="transform-headline">POWERED BY<br><span class="red">TECHNOLOGY.</span></div>
+          <div class="transform-sub">// SAMSARA GPS · AI DISPATCH</div>
+        </div>
+        <div class="transform-text-item" data-tf-idx="3">
+          <div class="transform-headline">SILT<br><span class="red">TRANSPORTATION</span><br>INC.</div>
+          <div class="transform-sub">// EST. 1994 · EL PASO, TX</div>
+        </div>
+      </div>
+    </div>
+    <div class="transform-progress-line">
+      <div class="transform-progress-fill" id="tf-progress-fill"></div>
+    </div>
+    <div class="transform-progress-label" id="tf-progress-label">WIREFRAME — 0%</div>
   </div>
 </div>
 
@@ -1159,6 +1205,201 @@ document.querySelectorAll('.stat-card').forEach(card=>{
     }
   });
 });
+
+// ============================================================
+// WIREFRAME → SOLID TRANSFORM SECTION
+// ============================================================
+(function(){
+  var canvas=document.getElementById('transform-canvas');
+  var wrapper=document.getElementById('transform-wrapper');
+  var progressFill=document.getElementById('tf-progress-fill');
+  var progressLabel=document.getElementById('tf-progress-label');
+  var textItems=document.querySelectorAll('[data-tf-idx]');
+  if(!canvas||!wrapper)return;
+
+  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(canvas.offsetWidth||window.innerWidth,canvas.offsetHeight||window.innerHeight);
+  renderer.setClearColor(0x05060A,1);
+
+  var scene=new THREE.Scene();
+  scene.fog=new THREE.Fog(0x05060A,25,60);
+
+  var camera=new THREE.PerspectiveCamera(50,(canvas.offsetWidth||window.innerWidth)/(canvas.offsetHeight||window.innerHeight),0.1,200);
+  camera.position.set(8,3.5,13);
+  camera.lookAt(0,0.5,0);
+
+  scene.add(new THREE.AmbientLight(0x111122,0.6));
+  var kL=new THREE.DirectionalLight(0xffffff,2.2);kL.position.set(5,8,5);scene.add(kL);
+  var fL=new THREE.DirectionalLight(0xE8000A,0.9);fL.position.set(-6,2,-4);scene.add(fL);
+  var rL=new THREE.DirectionalLight(0x3355ff,0.5);rL.position.set(0,4,-8);scene.add(rL);
+
+  var gridHelper=new THREE.GridHelper(50,50,0x1a0002,0x0a0001);
+  gridHelper.position.y=-1.32;
+  scene.add(gridHelper);
+
+  function buildTruck(isWire){
+    var g=new THREE.Group();
+    var wireMat=isWire?new THREE.MeshBasicMaterial({color:0xE8000A,wireframe:true,transparent:true,opacity:1}):null;
+
+    function mk(geo,solidColor,opts){
+      var mat;
+      if(isWire){mat=wireMat;}
+      else{
+        opts=opts||{};
+        mat=new THREE.MeshStandardMaterial(Object.assign({color:solidColor,metalness:0.75,roughness:0.3,transparent:true,opacity:0},opts));
+      }
+      return new THREE.Mesh(geo,mat);
+    }
+
+    // Trailer body
+    var tr=mk(new THREE.BoxGeometry(7,2.2,2.4),0x1a1d26);
+    tr.position.set(-1.5,0.5,0);g.add(tr);
+
+    // Trailer ribs
+    for(var i=-3;i<=3;i++){
+      var rib=mk(new THREE.BoxGeometry(0.06,2.2,2.42),0x252830);
+      rib.position.set(i*1.0-1.0,0.5,0);g.add(rib);
+    }
+
+    // Cab
+    var cab=mk(new THREE.BoxGeometry(2.2,2.4,2.4),0xcc0008);
+    cab.position.set(3.0,0.6,0);g.add(cab);
+
+    // Cab top fairing
+    var fair=mk(new THREE.BoxGeometry(1.8,0.6,2.3),0xaa0006);
+    fair.position.set(3.0,2.1,0);g.add(fair);
+
+    // Windshield
+    var wind=mk(new THREE.BoxGeometry(0.1,1.0,1.75),0x88aacc,{metalness:0.1,roughness:0.05,opacity:isWire?0:0,transparent:true});
+    wind.position.set(4.08,1.0,0);g.add(wind);
+
+    // Bumper
+    var bump=mk(new THREE.BoxGeometry(0.22,0.5,2.4),0x777777);
+    bump.position.set(4.2,-0.3,0);g.add(bump);
+
+    // Exhaust stacks
+    [-0.75,0.75].forEach(function(s){
+      var ex=mk(new THREE.CylinderGeometry(0.08,0.08,1.6,8),0x555555,{metalness:0.9,roughness:0.2});
+      ex.position.set(2.2,2.1,s);g.add(ex);
+    });
+
+    // Headlights
+    [-0.72,0.72].forEach(function(s){
+      var hl=mk(new THREE.BoxGeometry(0.1,0.28,0.4),0xffffcc,{metalness:0,roughness:0.1,emissive:0xffffcc,emissiveIntensity:isWire?0:2});
+      hl.position.set(4.22,0.5,s);g.add(hl);
+    });
+
+    // Wheels
+    var wPos=[[-3.5,-0.9,-1.3],[-3.5,-0.9,1.3],[-2.0,-0.9,-1.3],[-2.0,-0.9,1.3],[1.8,-0.9,-1.3],[1.8,-0.9,1.3],[3.2,-0.9,-1.3],[3.2,-0.9,1.3]];
+    wPos.forEach(function(p){
+      var w=mk(new THREE.CylinderGeometry(0.55,0.55,0.35,16),0x111111,{metalness:0.2,roughness:0.85});
+      w.rotation.z=Math.PI/2;w.position.set(p[0],p[1],p[2]);g.add(w);
+      var h=mk(new THREE.CylinderGeometry(0.22,0.22,0.38,8),0x888888,{metalness:0.9,roughness:0.2});
+      h.rotation.z=Math.PI/2;h.position.set(p[0],p[1],p[2]);g.add(h);
+    });
+
+    // Fifth wheel
+    var fw=mk(new THREE.CylinderGeometry(0.48,0.48,0.15,12),0x666666,{metalness:0.8,roughness:0.3});
+    fw.position.set(1.7,0.0,0);g.add(fw);
+
+    // Frame rails
+    [-0.8,0.8].forEach(function(s){
+      var fr=mk(new THREE.BoxGeometry(9.2,0.15,0.2),0x333333,{metalness:0.9,roughness:0.3});
+      fr.position.set(-0.1,-0.35,s);g.add(fr);
+    });
+
+    return g;
+  }
+
+  var wireTruck=buildTruck(true);
+  wireTruck.scale.setScalar(0.65);
+  scene.add(wireTruck);
+
+  var solidTruck=buildTruck(false);
+  solidTruck.scale.setScalar(0.65);
+  scene.add(solidTruck);
+
+  function setTruckOpacity(truck,opacity){
+    truck.traverse(function(child){
+      if(child.isMesh){
+        child.material.transparent=true;
+        child.material.opacity=opacity;
+      }
+    });
+  }
+  setTruckOpacity(wireTruck,1);
+  setTruckOpacity(solidTruck,0);
+
+  function getScrollProgress(){
+    var rect=wrapper.getBoundingClientRect();
+    var totalScroll=wrapper.offsetHeight-window.innerHeight;
+    if(totalScroll<=0)return 0;
+    return Math.max(0,Math.min(1,-rect.top/totalScroll));
+  }
+
+  var stages=['WIREFRAME','MORPHING...','RENDERING...','SOLID'];
+  function updateScene(progress){
+    // Progress bar
+    progressFill.style.height=(progress*100)+'%';
+    // Label
+    var si=progress<0.3?0:progress<0.7?1:progress<0.95?2:3;
+    progressLabel.textContent=stages[si]+' — '+Math.round(progress*100)+'%';
+    // Text crossfade
+    var ai=progress<0.25?0:progress<0.5?1:progress<0.75?2:3;
+    textItems.forEach(function(item){item.classList.toggle('active',parseInt(item.dataset.tfIdx)===ai);});
+    // Opacity morph
+    var wo,so;
+    if(progress<=0.3){wo=1;so=0;}
+    else if(progress<=0.7){var t=(progress-0.3)/0.4;wo=1-t;so=t;}
+    else{wo=0;so=1;}
+    setTruckOpacity(wireTruck,wo);
+    setTruckOpacity(solidTruck,so);
+    // Camera orbit
+    var angle=0.3+progress*Math.PI*0.55;
+    var r=13-progress*3.5;
+    camera.position.x=Math.sin(angle)*r;
+    camera.position.z=Math.cos(angle)*r;
+    camera.position.y=3+progress*2;
+    camera.lookAt(0,0.5,0);
+    // Truck rotation
+    var ry=progress*Math.PI*0.45;
+    wireTruck.rotation.y=ry;
+    solidTruck.rotation.y=ry;
+  }
+
+  var tfRafId=null,isVisible=false,tfPrevTime=performance.now();
+
+  function tfAnimate(now){
+    tfRafId=null;
+    tfPrevTime=now;
+    updateScene(getScrollProgress());
+    renderer.render(scene,camera);
+    if(isVisible)tfRafId=requestAnimationFrame(tfAnimate);
+  }
+
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      isVisible=e.isIntersecting;
+      if(isVisible&&!tfRafId)tfRafId=requestAnimationFrame(tfAnimate);
+    });
+  },{threshold:0.01});
+  obs.observe(wrapper);
+
+  window.addEventListener('scroll',function(){
+    if(isVisible&&!tfRafId)tfRafId=requestAnimationFrame(tfAnimate);
+  },{passive:true});
+
+  window.addEventListener('resize',function(){
+    var w=canvas.offsetWidth||window.innerWidth;
+    var h=canvas.offsetHeight||window.innerHeight;
+    camera.aspect=w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w,h);
+  });
+
+  tfRafId=requestAnimationFrame(tfAnimate);
+})();
 
 // ============================================================
 // FORM SUBMIT
