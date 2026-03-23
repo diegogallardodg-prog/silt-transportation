@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SILT Transportation Inc. — El Paso, TX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+:root {
+  --red: #E8000A;
+  --yellow: #FFD600;
+  --bg: #05060A;
+  --bg2: #090B11;
+  --bg3: #0D0F16;
+  --white: #EDF0F7;
+  --muted: #4A5068;
+  --border: rgba(232,0,10,0.18);
+  --border2: rgba(255,214,0,0.12);
+  --red-glow: rgba(232,0,10,0.45);
+  --grid: rgba(232,0,10,0.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--white);font-family:'Rajdhani',sans-serif;overflow-x:hidden;cursor:none;}
+body.loaded #loader{opacity:0;pointer-events:none;}
+
+/* CURSOR */
+#cursor-dot{position:fixed;width:10px;height:10px;background:var(--red);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:opacity .2s;}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1.5px solid var(--yellow);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:opacity .2s;}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .7s ease;}
+.loader-logo{font-family:'Bebas Neue',cursive;font-size:3rem;letter-spacing:.2em;color:var(--white);margin-bottom:2rem;}
+.loader-logo span{color:var(--red);}
+.loader-truck-wrap{position:relative;width:320px;height:120px;margin-bottom:1.5rem;}
+.loader-truck-wrap svg{width:100%;height:100%;}
+.road-line{stroke-dasharray:16 12;animation:road-move 0.4s linear infinite;}
+@keyframes road-move{to{stroke-dashoffset:-28;}}
+.loader-status{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--yellow);letter-spacing:.12em;margin-bottom:1rem;min-height:1.2em;}
+.loader-bar-wrap{width:260px;height:2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}
+.loader-bar{height:100%;width:0%;background:var(--red);transition:width .15s ease;border-radius:2px;}
+
+/* NAV */
+#nav{position:fixed;top:0;left:0;right:0;z-index:800;padding:0 56px;height:64px;display:flex;align-items:center;justify-content:space-between;transition:background .3s,border-bottom .3s;}
+#nav.scrolled{background:rgba(5,6,10,.96);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);}
+.nav-logo{font-family:'Bebas Neue',cursive;font-size:1.7rem;letter-spacing:.1em;color:var(--white);text-decoration:none;}
+.nav-logo span{color:var(--red);}
+.nav-links{display:flex;gap:2.2rem;list-style:none;}
+.nav-links a{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.1em;color:var(--muted);text-decoration:none;text-transform:uppercase;transition:color .2s;}
+.nav-links a:hover{color:var(--white);}
+.nav-cta{font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:.08em;background:var(--red);color:var(--bg);padding:.45rem 1.4rem;text-decoration:none;border:none;cursor:pointer;transition:box-shadow .2s;}
+.nav-cta:hover{box-shadow:0 0 18px var(--red-glow);}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;}
+.nav-hamburger span{width:24px;height:2px;background:var(--white);display:block;}
+
+/* HERO */
+#hero{position:relative;width:100%;height:100vh;overflow:hidden;}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;}
+.hero-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(5,6,10,.7) 100%),linear-gradient(to bottom,rgba(5,6,10,.3) 0%,transparent 30%,transparent 60%,rgba(5,6,10,.8) 100%);pointer-events:none;}
+.hero-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(232,0,10,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(232,0,10,.04) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 20%,transparent 100%);mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 20%,transparent 100%);}
+.hero-scanlines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);}
+
+/* HUD corners */
+.hud{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:var(--yellow);line-height:1.7;pointer-events:none;opacity:.85;}
+.hud-tl{top:80px;left:24px;}
+.hud-tr{top:80px;right:24px;text-align:right;}
+.hud-bl{bottom:80px;left:24px;}
+.hud-br{bottom:80px;right:24px;text-align:right;}
+.hud::before,.hud::after{content:'';position:absolute;background:var(--yellow);}
+.hud-tl::before{top:0;left:-8px;width:8px;height:1.5px;}
+.hud-tl::after{top:-8px;left:-8px;width:1.5px;height:8px;}
+.hud-tr::before{top:0;right:-8px;width:8px;height:1.5px;}
+.hud-tr::after{top:-8px;right:-8px;width:1.5px;height:8px;}
+.hud-bl::before{bottom:0;left:-8px;width:8px;height:1.5px;}
+.hud-bl::after{bottom:-8px;left:-8px;width:1.5px;height:8px;}
+.hud-br::before{bottom:0;right:-8px;width:8px;height:1.5px;}
+.hud-br::after{bottom:-8px;right:-8px;width:1.5px;height:8px;}
+
+.hero-content{position:absolute;bottom:0;left:0;padding:0 56px 96px;max-width:640px;opacity:0;}
+.hero-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.18em;color:var(--yellow);margin-bottom:1.1rem;opacity:0;transform:translateY(14px);}
+.hero-h1{font-family:'Bebas Neue',cursive;font-size:clamp(4rem,8vw,8rem);line-height:.95;letter-spacing:.02em;margin-bottom:1.4rem;opacity:0;transform:translateY(40px);}
+.hero-h1 .red{color:var(--red);}
+.hero-sub{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:500;color:rgba(237,240,247,.7);line-height:1.6;max-width:480px;margin-bottom:2rem;opacity:0;transform:translateY(28px);}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;opacity:0;transform:translateY(20px);}
+.btn-red{font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:.1em;background:var(--red);color:var(--bg);padding:.7rem 2rem;text-decoration:none;border:none;cursor:pointer;transition:box-shadow .2s;}
+.btn-red:hover{box-shadow:0 0 24px var(--red-glow);}
+.btn-ghost{font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:.1em;background:transparent;color:var(--white);padding:.7rem 2rem;text-decoration:none;border:1px solid rgba(237,240,247,.25);transition:border-color .2s;}
+.btn-ghost:hover{border-color:var(--white);}
+.scroll-ind{position:absolute;bottom:24px;right:28px;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;}
+.scroll-ind-line{width:1px;height:48px;background:linear-gradient(to bottom,transparent,var(--red));animation:pulse-line 2s ease-in-out infinite;}
+.scroll-ind-text{font-family:'IBM Plex Mono',monospace;font-size:.55rem;letter-spacing:.2em;color:var(--muted);writing-mode:vertical-rl;}
+@keyframes pulse-line{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* TICKER */
+#ticker{background:var(--red);overflow:hidden;height:40px;display:flex;align-items:center;}
+.ticker-inner{display:flex;white-space:nowrap;animation:ticker-move 24s linear infinite;}
+.ticker-item{font-family:'Bebas Neue',cursive;font-size:.95rem;letter-spacing:.12em;color:var(--bg);padding:0 1.5rem;}
+.ticker-sep{color:rgba(5,6,10,.4);font-size:.7rem;}
+
+@keyframes ticker-move{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* SECTIONS COMMON */
+.section{padding:120px 56px;}
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.18em;color:var(--red);margin-bottom:1rem;opacity:0;}
+.section-h2{font-family:'Bebas Neue',cursive;font-size:clamp(2.5rem,5vw,4.5rem);line-height:1;letter-spacing:.02em;margin-bottom:3rem;opacity:0;}
+
+/* SERVICES */
+#services{background:var(--bg);}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);}
+.svc-card{background:var(--bg2);padding:2.5rem 2rem;position:relative;overflow:hidden;opacity:0;cursor:default;transition:background .3s;}
+.svc-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,0,10,.08),transparent);opacity:0;transition:opacity .3s;}
+.svc-card:hover{background:var(--bg3);}
+.svc-card:hover::before{opacity:1;}
+.svc-num{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.15em;color:var(--muted);margin-bottom:1.5rem;}
+.svc-icon{margin-bottom:1.5rem;width:48px;height:48px;color:var(--red);}
+.svc-title{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:.05em;margin-bottom:.8rem;}
+.svc-desc{font-size:.95rem;color:rgba(237,240,247,.65);line-height:1.6;margin-bottom:1.5rem;}
+.svc-tag{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.12em;color:var(--yellow);border:1px solid var(--border2);padding:.3rem .7rem;display:inline-block;}
+
+/* TECH */
+#tech{background:var(--bg2);padding:120px 56px;}
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;}
+.tech-map-wrap{position:relative;aspect-ratio:16/10;background:var(--bg3);border:1px solid var(--border);overflow:hidden;opacity:0;}
+.tech-map-wrap canvas{width:100%;height:100%;display:block;}
+.tech-features{opacity:0;}
+.tech-feat{padding:1.5rem 0;border-bottom:1px solid var(--border);position:relative;}
+.tech-feat-num{font-family:'Bebas Neue',cursive;font-size:4rem;color:rgba(232,0,10,.15);position:absolute;top:0;right:0;line-height:1;}
+.tech-feat-title{font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:.05em;margin-bottom:.4rem;}
+.tech-feat-desc{font-size:.9rem;color:rgba(237,240,247,.6);line-height:1.6;max-width:380px;}
+
+/* FLEET */
+#fleet{background:var(--bg);padding:120px 56px;}
+.fleet-canvas-wrap{position:relative;height:460px;background:var(--bg3);border:1px solid var(--border);overflow:hidden;margin-bottom:1px;opacity:0;}
+#fleet-canvas{width:100%;height:100%;display:block;}
+.fleet-tabs{display:flex;gap:1px;background:var(--border);}
+.fleet-tab{flex:1;font-family:'Bebas Neue',cursive;font-size:1rem;letter-spacing:.08em;padding:.8rem;background:var(--bg2);color:var(--muted);border:none;cursor:pointer;transition:background .2s,color .2s;}
+.fleet-tab.active{background:var(--red);color:var(--bg);}
+.fleet-tab:hover:not(.active){background:var(--bg3);color:var(--white);}
+
+/* STATS */
+#stats{background:var(--bg2);padding:120px 56px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
+.stat-card{background:var(--bg3);padding:2.5rem 2rem;position:relative;overflow:hidden;opacity:0;}
+.stat-bar{position:absolute;top:0;left:0;right:0;height:2px;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform 1.8s ease;}
+.stat-num{font-family:'Bebas Neue',cursive;font-size:clamp(2.2rem,3.5vw,3.2rem);line-height:1;margin-bottom:.4rem;}
+.stat-suf{color:var(--red);font-style:italic;}
+.stat-label{font-family:'Rajdhani',sans-serif;font-size:.9rem;color:rgba(237,240,247,.6);margin-bottom:.3rem;}
+.stat-sub{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.12em;color:var(--muted);}
+
+/* CONTACT */
+#contact{background:var(--bg);padding:120px 56px;}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;}
+.contact-info{opacity:0;}
+.contact-row{display:flex;gap:1.5rem;padding:1rem 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.contact-row-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.15em;color:var(--red);min-width:80px;padding-top:.1rem;}
+.contact-row-val{font-family:'Rajdhani',sans-serif;font-size:.95rem;color:rgba(237,240,247,.8);line-height:1.5;}
+.contact-certs{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.5rem;}
+.cert-badge{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.1em;border:1px solid var(--border);padding:.3rem .6rem;color:var(--yellow);}
+.contact-form-wrap{opacity:0;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem;}
+.form-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.12em;color:var(--muted);}
+.form-input,.form-select,.form-textarea{background:var(--bg2);border:1px solid rgba(74,80,104,.3);color:var(--white);font-family:'Rajdhani',sans-serif;font-size:.95rem;padding:.7rem 1rem;outline:none;transition:border-color .2s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--red);}
+.form-select{appearance:none;cursor:pointer;}
+.form-textarea{resize:vertical;min-height:100px;}
+.btn-submit{width:100%;font-family:'Bebas Neue',cursive;font-size:1.1rem;letter-spacing:.1em;background:var(--red);color:var(--bg);padding:.9rem;border:none;cursor:pointer;margin-top:.5rem;transition:box-shadow .2s;}
+.btn-submit:hover{box-shadow:0 0 28px var(--red-glow);}
+
+/* FOOTER */
+#footer{background:var(--bg2);border-top:1px solid var(--border);padding:64px 56px 0;}
+.footer-top{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;}
+.footer-brand-logo{font-family:'Bebas Neue',cursive;font-size:2.2rem;letter-spacing:.1em;margin-bottom:.8rem;}
+.footer-brand-logo span{color:var(--red);}
+.footer-brand-desc{font-size:.9rem;color:var(--muted);line-height:1.6;margin-bottom:.5rem;}
+.footer-col-title{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.18em;color:var(--red);margin-bottom:1.2rem;}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:.6rem;}
+.footer-col ul li a{font-size:.9rem;color:var(--muted);text-decoration:none;transition:color .2s;}
+.footer-col ul li a:hover{color:var(--white);}
+.footer-bottom{border-top:1px solid var(--border);padding:1.2rem 0;display:flex;justify-content:space-between;align-items:center;}
+.footer-copy{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;color:var(--muted);}
+.footer-status{display:flex;align-items:center;gap:.5rem;font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.1em;color:var(--muted);}
+.status-dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:blink 1.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* MOBILE */
+@media(max-width:960px){
+  #nav{padding:0 20px;}
+  .nav-links,.nav-cta{display:none;}
+  .nav-hamburger{display:flex;}
+  .nav-links.open{display:flex;flex-direction:column;position:absolute;top:64px;left:0;right:0;background:rgba(5,6,10,.98);padding:1.5rem 20px;border-bottom:1px solid var(--border);}
+  .section{padding:80px 20px;}
+  #tech,#fleet,#stats,#contact{padding:80px 20px;}
+  .services-grid{grid-template-columns:1fr;}
+  .tech-grid{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .contact-grid{grid-template-columns:1fr;}
+  .footer-top{grid-template-columns:1fr;gap:2rem;}
+  .hero-content{padding:0 20px 80px;}
+  .hero-h1{font-size:clamp(3rem,12vw,5rem);}
+  .hud-tr,.hud-br{display:none;}
+  .hud-tl,.hud-bl{font-size:.55rem;}
+  #footer{padding:48px 20px 0;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">SILT<span>.</span></div>
+  <div class="loader-truck-wrap">
+    <svg viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Road -->
+      <line x1="0" y1="105" x2="320" y2="105" stroke="#1a1f2e" stroke-width="2"/>
+      <line class="road-line" x1="0" y1="105" x2="320" y2="105" stroke="#FFD600" stroke-width="1.5" stroke-dasharray="16 12" opacity="0.5"/>
+      <!-- Trailer -->
+      <rect x="20" y="52" width="160" height="44" rx="2" stroke="#E8000A" stroke-width="1.5" fill="none"/>
+      <line x1="20" y1="62" x2="180" y2="62" stroke="#E8000A" stroke-width="0.5" opacity="0.4"/>
+      <!-- Cab -->
+      <rect x="182" y="60" width="68" height="36" rx="2" stroke="#EDF0F7" stroke-width="1.5" fill="none"/>
+      <rect x="200" y="64" width="30" height="18" rx="1" stroke="#4A5068" stroke-width="1" fill="none"/>
+      <!-- Bumper -->
+      <rect x="248" y="82" width="6" height="10" stroke="#EDF0F7" stroke-width="1.2" fill="none"/>
+      <!-- Headlight -->
+      <circle cx="252" cy="75" r="3" stroke="#FFD600" stroke-width="1.2" fill="none"/>
+      <!-- Exhaust -->
+      <rect x="190" y="38" width="4" height="22" stroke="#4A5068" stroke-width="1" fill="none"/>
+      <!-- Wheels cab -->
+      <circle cx="205" cy="100" r="8" stroke="#EDF0F7" stroke-width="1.5" fill="none"/>
+      <circle cx="205" cy="100" r="4" stroke="#4A5068" stroke-width="1" fill="none"/>
+      <circle cx="240" cy="100" r="8" stroke="#EDF0F7" stroke-width="1.5" fill="none"/>
+      <circle cx="240" cy="100" r="4" stroke="#4A5068" stroke-width="1" fill="none"/>
+      <!-- Wheels trailer -->
+      <circle cx="60" cy="100" r="8" stroke="#E8000A" stroke-width="1.5" fill="none"/>
+      <circle cx="60" cy="100" r="4" stroke="#4A5068" stroke-width="1" fill="none"/>
+      <circle cx="95" cy="100" r="8" stroke="#E8000A" stroke-width="1.5" fill="none"/>
+      <circle cx="95" cy="100" r="4" stroke="#4A5068" stroke-width="1" fill="none"/>
+      <circle cx="140" cy="100" r="8" stroke="#E8000A" stroke-width="1.5" fill="none"/>
+      <circle cx="140" cy="100" r="4" stroke="#4A5068" stroke-width="1" fill="none"/>
+    </svg>
+  </div>
+  <div class="loader-status" id="loader-status">INITIALIZING SYSTEMS</div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="loader-bar"></div></div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">SILT<span>.</span></a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#tech">Technology</a></li>
+    <li><a href="#fleet">Fleet</a></li>
+    <li><a href="#stats">Track Record</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Get a Quote</a>
+  <div class="nav-hamburger" id="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-vignette"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-scanlines"></div>
+
+  <!-- HUD -->
+  <div class="hud hud-tl">
+    31.7619° N, 106.4850° W<br>
+    <span id="hud-clock">--:--:-- CST</span><br>
+    EL PASO HQ — ACTIVE
+  </div>
+  <div class="hud hud-tr">
+    52 UNITS DEPLOYED<br>
+    AVG SPEED: <span id="hud-speed">64</span> MPH<br>
+    SAMSARA GPS LIVE
+  </div>
+  <div class="hud hud-bl">
+    DOT# 2002220<br>
+    MC# 706803<br>
+    OEA CERTIFIED
+  </div>
+  <div class="hud hud-br">
+    4,173,115 MI / 2024<br>
+    FLEET: NOMINAL<br>
+    71 DRIVERS ACTIVE
+  </div>
+
+  <div class="hero-content" id="hero-content">
+    <div class="hero-eyebrow" id="hero-eyebrow">SILT TRANSPORTATION INC — EL PASO, TX — EST. 1994</div>
+    <h1 class="hero-h1" id="hero-h1">WE MOVE<br><span class="red">WHAT OTHERS</span><br>CAN'T.</h1>
+    <p class="hero-sub" id="hero-sub">Heavy haul. Specialized freight. Cross-border logistics.<br>From El Paso to everywhere — with technology, precision,<br>and 30 years of grit.</p>
+    <div class="hero-btns" id="hero-btns">
+      <a href="#contact" class="btn-red">REQUEST A QUOTE</a>
+      <a href="#fleet" class="btn-ghost">VIEW FLEET</a>
+    </div>
+  </div>
+
+  <div class="scroll-ind" id="scroll-ind">
+    <div class="scroll-ind-line"></div>
+    <span class="scroll-ind-text">SCROLL</span>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div id="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">FULL TRUCKLOAD</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">CROSS-BORDER LOGISTICS</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">EQUIPMENT LEASING</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">EL PASO TO EVERYWHERE</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">GPS FLEET MONITORING</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">BONDED WAREHOUSE</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">OEA CERTIFIED</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">53' DRY VAN</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">FLATBED TRANSPORT</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">30 YEARS OF SERVICE</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">71 LICENSED DRIVERS</span><span class="ticker-sep">◆</span>
+    <!-- duplicate for seamless loop -->
+    <span class="ticker-item">FULL TRUCKLOAD</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">CROSS-BORDER LOGISTICS</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">EQUIPMENT LEASING</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">EL PASO TO EVERYWHERE</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">GPS FLEET MONITORING</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">BONDED WAREHOUSE</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">OEA CERTIFIED</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">53' DRY VAN</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">FLATBED TRANSPORT</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">30 YEARS OF SERVICE</span><span class="ticker-sep">◆</span>
+    <span class="ticker-item">71 LICENSED DRIVERS</span><span class="ticker-sep">◆</span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section id="services" class="section">
+  <div class="section-label" data-anim="fade">01 — CAPABILITIES</div>
+  <h2 class="section-h2" data-anim="fade">WHAT WE DO.</h2>
+  <div class="services-grid">
+    <div class="svc-card" data-anim="fade">
+      <div class="svc-num">SVC.001</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="16" width="30" height="20" rx="2"/>
+        <rect x="32" y="22" width="14" height="14" rx="1"/>
+        <circle cx="10" cy="38" r="4"/>
+        <circle cx="22" cy="38" r="4"/>
+        <circle cx="40" cy="38" r="4"/>
+        <line x1="32" y1="28" x2="46" y2="28"/>
+      </svg>
+      <h3 class="svc-title">Transportation</h3>
+      <p class="svc-desc">Full truckload, LTL, and cross-border freight movement between El Paso and Ciudad Juárez via Córdoba and Zaragoza bridges. 52 active units.</p>
+      <span class="svc-tag">FTL · LTL · CROSS-BORDER</span>
+    </div>
+    <div class="svc-card" data-anim="fade">
+      <div class="svc-num">SVC.002</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="4" y="20" width="40" height="24" rx="2"/>
+        <polyline points="4,20 24,8 44,20"/>
+        <rect x="18" y="30" width="12" height="14"/>
+        <line x1="8" y1="28" x2="16" y2="28"/>
+        <line x1="32" y1="28" x2="40" y2="28"/>
+      </svg>
+      <h3 class="svc-title">Warehousing</h3>
+      <p class="svc-desc">100,000 sq ft bonded warehouse facility in El Paso. Inventory management, cross-dock operations, and customs-compliant storage.</p>
+      <span class="svc-tag">BONDED · 100K SQ FT · INVENTORY</span>
+    </div>
+    <div class="svc-card" data-anim="fade">
+      <div class="svc-num">SVC.003</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="4" y="18" width="40" height="20" rx="2"/>
+        <circle cx="12" cy="40" r="4"/>
+        <circle cx="36" cy="40" r="4"/>
+        <line x1="4" y1="24" x2="44" y2="24"/>
+        <line x1="4" y1="30" x2="44" y2="30"/>
+      </svg>
+      <h3 class="svc-title">Equipment Leasing</h3>
+      <p class="svc-desc">53' dry vans, flatbeds, and specialized trailers available for short and long-term lease. Cross-border capable equipment.</p>
+      <span class="svc-tag">53' DRY VAN · FLATBED · FLEXIBLE</span>
+    </div>
+  </div>
+</section>
+
+<!-- TECH -->
+<section id="tech">
+  <div class="section-label" data-anim="fade">02 — TECHNOLOGY</div>
+  <h2 class="section-h2" data-anim="fade">BUILT ON DATA &amp; PRECISION.</h2>
+  <div class="tech-grid">
+    <div class="tech-map-wrap" data-anim="rl">
+      <canvas id="map-canvas"></canvas>
+    </div>
+    <div class="tech-features" data-anim="rr">
+      <div class="tech-feat">
+        <span class="tech-feat-num">01</span>
+        <h3 class="tech-feat-title">Samsara GPS Tracking</h3>
+        <p class="tech-feat-desc">Real-time vehicle location, driver behavior scoring, and cargo monitoring. Every truck visible 24/7.</p>
+      </div>
+      <div class="tech-feat">
+        <span class="tech-feat-num">02</span>
+        <h3 class="tech-feat-title">AI Route Optimization</h3>
+        <p class="tech-feat-desc">Dynamic routing accounting for traffic, weather, border crossing times, and fuel — cutting transit up to 18%.</p>
+      </div>
+      <div class="tech-feat">
+        <span class="tech-feat-num">03</span>
+        <h3 class="tech-feat-title">OEA Certified Security</h3>
+        <p class="tech-feat-desc">Full OEA compliance. K9 inspections at Córdoba and Zaragoza bridges. Zero-tolerance contamination policy.</p>
+      </div>
+      <div class="tech-feat">
+        <span class="tech-feat-num">04</span>
+        <h3 class="tech-feat-title">Integrated Traffic Control</h3>
+        <p class="tech-feat-desc">Proprietary SILT monitoring system — movement logging, yard coordination, and fleet administration dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FLEET -->
+<section id="fleet">
+  <div class="section-label" data-anim="fade">03 — FLEET</div>
+  <h2 class="section-h2" data-anim="fade">52 UNITS. ONE MISSION.</h2>
+  <div class="fleet-canvas-wrap" data-anim="fade">
+    <canvas id="fleet-canvas"></canvas>
+  </div>
+  <div class="fleet-tabs" id="fleet-tabs">
+    <button class="fleet-tab active" data-type="0">Dry Van</button>
+    <button class="fleet-tab" data-type="1">Flatbed</button>
+    <button class="fleet-tab" data-type="2">Reefer</button>
+    <button class="fleet-tab" data-type="3">Step Deck</button>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="section-label" data-anim="fade">04 — TRACK RECORD</div>
+  <h2 class="section-h2" data-anim="fade">30 YEARS. BY THE NUMBERS.</h2>
+  <div class="stats-grid">
+    <div class="stat-card" data-anim="fade" data-target="4173115" data-suffix="+" data-format="M">
+      <div class="stat-bar"></div>
+      <div class="stat-num"><span class="stat-val">0</span><span class="stat-suf">+</span></div>
+      <div class="stat-label">Miles Driven (2024)</div>
+      <div class="stat-sub">DOT VERIFIED</div>
+    </div>
+    <div class="stat-card" data-anim="fade" data-target="52" data-suffix="" data-format="plain">
+      <div class="stat-bar"></div>
+      <div class="stat-num"><span class="stat-val">0</span><span class="stat-suf"> UNITS</span></div>
+      <div class="stat-label">Active Fleet Size</div>
+      <div class="stat-sub">+ GROWING</div>
+    </div>
+    <div class="stat-card" data-anim="fade" data-target="71" data-suffix="" data-format="plain">
+      <div class="stat-bar"></div>
+      <div class="stat-num"><span class="stat-val">0</span><span class="stat-suf"> CDL</span></div>
+      <div class="stat-label">Licensed Drivers</div>
+      <div class="stat-sub">US &amp; MEXICO</div>
+    </div>
+    <div class="stat-card" data-anim="fade" data-target="30" data-suffix="" data-format="plain">
+      <div class="stat-bar"></div>
+      <div class="stat-num"><span class="stat-val">0</span><span class="stat-suf"> YRS</span></div>
+      <div class="stat-label">In Operation</div>
+      <div class="stat-sub">EST. 1994</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-label" data-anim="fade">05 — CONTACT</div>
+  <h2 class="section-h2" data-anim="fade">LET'S MOVE YOUR FREIGHT.</h2>
+  <div class="contact-grid">
+    <div class="contact-info" data-anim="rl">
+      <div class="contact-row">
+        <span class="contact-row-label">ADDRESS</span>
+        <span class="contact-row-val">9525 Plaza Circle Dr<br>El Paso, TX 79927</span>
+      </div>
+      <div class="contact-row">
+        <span class="contact-row-label">SALES</span>
+        <span class="contact-row-val">sales.logistics@siltcorp.com</span>
+      </div>
+      <div class="contact-row">
+        <span class="contact-row-label">LEASING</span>
+        <span class="contact-row-val">(915) 702-4349</span>
+      </div>
+      <div class="contact-row">
+        <span class="contact-row-label">DISPATCH</span>
+        <span class="contact-row-val">24/7 Operations</span>
+      </div>
+      <div class="contact-certs">
+        <span class="cert-badge">OEA CERTIFIED</span>
+        <span class="cert-badge">MC# 706803</span>
+        <span class="cert-badge">DOT# 2002220</span>
+        <span class="cert-badge">MINORITY OWNED</span>
+        <span class="cert-badge">INTERSTATE AUTH FOR HIRE</span>
+      </div>
+    </div>
+    <div class="contact-form-wrap" data-anim="rr">
+      <form id="quote-form" onsubmit="return false;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">FIRST NAME</label>
+            <input class="form-input" type="text" placeholder="First Name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LAST NAME</label>
+            <input class="form-input" type="text" placeholder="Last Name">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">COMPANY NAME</label>
+          <input class="form-input" type="text" placeholder="Company Name">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">EMAIL</label>
+            <input class="form-input" type="email" placeholder="you@company.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">PHONE</label>
+            <input class="form-input" type="tel" placeholder="(xxx) xxx-xxxx">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">SERVICE NEEDED</label>
+          <select class="form-select">
+            <option value="">Select a Service</option>
+            <option>Full Truckload (FTL)</option>
+            <option>Less Than Truckload (LTL)</option>
+            <option>Cross-Border / Mexico</option>
+            <option>Warehousing</option>
+            <option>Equipment Leasing</option>
+            <option>Expedited Freight</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">LOAD DETAILS</label>
+          <textarea class="form-textarea" placeholder="Describe your freight, origin, destination, timeline..."></textarea>
+        </div>
+        <button type="submit" class="btn-submit">SUBMIT REQUEST →</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand-logo">SILT<span>.</span></div>
+      <p class="footer-brand-desc">Servicio Internacional de Lógica y Transporte.</p>
+      <p class="footer-brand-desc">Moving freight across borders since 1994.</p>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">SERVICES</div>
+      <ul>
+        <li><a href="#services">Transportation</a></li>
+        <li><a href="#services">Warehousing</a></li>
+        <li><a href="#services">Equipment Leasing</a></li>
+        <li><a href="#services">Cross-Border</a></li>
+        <li><a href="#services">Expedited</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">COMPANY</div>
+      <ul>
+        <li><a href="#">About SILT</a></li>
+        <li><a href="#">Certifications</a></li>
+        <li><a href="#">Safety Record</a></li>
+        <li><a href="#">Careers</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">LOCATIONS</div>
+      <ul>
+        <li><a href="#">El Paso, TX HQ</a></li>
+        <li><a href="#">Ciudad Juárez, MX</a></li>
+        <li><a href="#">Chihuahua, MX</a></li>
+        <li><a href="#">Santa Teresa, NM</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 SILT TRANSPORTATION INC — ALL RIGHTS RESERVED — EL PASO, TX</span>
+    <div class="footer-status"><span class="status-dot"></span>ALL SYSTEMS OPERATIONAL</div>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// CURSOR
+// ============================================================
+const cursorDot = document.getElementById('cursor-dot');
+const cursorRing = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursorDot.style.left=mx+'px';cursorDot.style.top=my+'px';});
+(function animCursor(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cursorRing.style.left=rx+'px';cursorRing.style.top=ry+'px';requestAnimationFrame(animCursor);})();
+
+// ============================================================
+// LOADER
+// ============================================================
+const loaderBar=document.getElementById('loader-bar');
+const loaderStatus=document.getElementById('loader-status');
+const statuses=['CONNECTING TO FLEET','LOADING GPS DATA','SYNCING DISPATCH','SYSTEMS READY'];
+let progress=0,statusIdx=0;
+function advanceLoader(){
+  const inc=Math.random()*8+3;
+  progress=Math.min(100,progress+inc);
+  loaderBar.style.width=progress+'%';
+  if(progress>25&&statusIdx===0){statusIdx=1;loaderStatus.textContent=statuses[1];}
+  if(progress>55&&statusIdx===1){statusIdx=2;loaderStatus.textContent=statuses[2];}
+  if(progress>85&&statusIdx===2){statusIdx=3;loaderStatus.textContent=statuses[3];}
+  if(progress<100){setTimeout(advanceLoader,Math.random()*120+60);}
+  else{setTimeout(bootSite,600);}
+}
+setTimeout(()=>{loaderStatus.textContent=statuses[0];advanceLoader();},300);
+
+function bootSite(){
+  const loader=document.getElementById('loader');
+  loader.style.opacity='0';
+  loader.style.pointerEvents='none';
+  setTimeout(()=>{loader.style.display='none';},700);
+  // Hero boot sequence
+  const hc=document.getElementById('hero-content');
+  hc.style.opacity='1';
+  gsap.to('#hero-eyebrow',{opacity:1,y:0,duration:.8,delay:.1,ease:'power3.out'});
+  gsap.to('#hero-h1',{opacity:1,y:0,duration:.9,delay:.25,ease:'power3.out'});
+  gsap.to('#hero-sub',{opacity:1,y:0,duration:.85,delay:.45,ease:'power3.out'});
+  gsap.to('#hero-btns',{opacity:1,y:0,duration:.8,delay:.6,ease:'power3.out'});
+  gsap.to('#scroll-ind',{opacity:1,duration:.7,delay:.85,ease:'power3.out'});
+}
+
+// ============================================================
+// NAV SCROLL
+// ============================================================
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>60);
+});
+
+// ============================================================
+// HUD CLOCK + SPEED
+// ============================================================
+function updateClock(){
+  const now=new Date();
+  const cst=new Date(now.toLocaleString('en-US',{timeZone:'America/Chicago'}));
+  const h=String(cst.getHours()).padStart(2,'0');
+  const m=String(cst.getMinutes()).padStart(2,'0');
+  const s=String(cst.getSeconds()).padStart(2,'0');
+  const el=document.getElementById('hud-clock');
+  if(el)el.textContent=`${h}:${m}:${s} CST`;
+}
+setInterval(updateClock,1000);updateClock();
+setInterval(()=>{
+  const el=document.getElementById('hud-speed');
+  if(el)el.textContent=Math.floor(Math.random()*7+62);
+},2800);
+
+// ============================================================
+// HERO THREE.JS
+// ============================================================
+(function initHero(){
+  const canvas=document.getElementById('hero-canvas');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled=false;
+  const scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x05060A);
+  scene.fog=new THREE.FogExp2(0x05060A,0.013);
+  const camera=new THREE.PerspectiveCamera(55,canvas.clientWidth/canvas.clientHeight,0.1,400);
+  camera.position.set(0,11,36);camera.lookAt(0,3,0);
+
+  function resize(){
+    const w=canvas.parentElement.clientWidth,h=canvas.parentElement.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h;camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize',resize);resize();
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0x0a0b14,3));
+  const dirKey=new THREE.DirectionalLight(0xfff4e0,0.9);dirKey.position.set(8,14,6);scene.add(dirKey);
+  const dirRed=new THREE.DirectionalLight(0xE8000A,0.55);dirRed.position.set(-10,4,-8);scene.add(dirRed);
+  const dirYellow=new THREE.DirectionalLight(0xFFD600,0.25);dirYellow.position.set(4,2,10);scene.add(dirYellow);
+
+  // Road
+  const roadMat=new THREE.MeshLambertMaterial({color:0x08090f});
+  const road=new THREE.Mesh(new THREE.PlaneGeometry(600,28),roadMat);
+  road.rotation.x=-Math.PI/2;road.position.y=-0.01;scene.add(road);
+
+  // Edge lines
+  const edgeMat=new THREE.MeshBasicMaterial({color:0xE8000A,emissive:0xE8000A});
+  [-6.5,6.5].forEach(z=>{
+    const el=new THREE.Mesh(new THREE.BoxGeometry(600,0.015,0.07),edgeMat);
+    el.position.set(0,0.01,z);scene.add(el);
+  });
+
+  // Center dashes
+  const dashMat=new THREE.MeshBasicMaterial({color:0xFFD600});
+  for(let x=-280;x<280;x+=11){
+    const d=new THREE.Mesh(new THREE.BoxGeometry(3,0.015,0.1),dashMat);
+    d.position.set(x,0.01,0);scene.add(d);
+  }
+
+  // Stars
+  const starsGeo=new THREE.BufferGeometry();
+  const starsPos=new Float32Array(900*3);
+  for(let i=0;i<900;i++){starsPos[i*3]=(Math.random()-0.5)*500;starsPos[i*3+1]=Math.random()*80+10;starsPos[i*3+2]=(Math.random()-0.5)*300-20;}
+  starsGeo.setAttribute('position',new THREE.BufferAttribute(starsPos,3));
+  scene.add(new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0x223344,size:0.35})));
+
+  // Build truck function
+  function buildTruck(bodyColor){
+    const g=new THREE.Group();
+    const chrome=new THREE.MeshLambertMaterial({color:0xaaaaaa});
+    const black=new THREE.MeshLambertMaterial({color:0x111111});
+    const glass=new THREE.MeshLambertMaterial({color:0x1a3a5c,transparent:true,opacity:.55});
+    const bodyMat=new THREE.MeshLambertMaterial({color:bodyColor});
+    const redMat=new THREE.MeshBasicMaterial({color:0xE8000A});
+    const yellowMat=new THREE.MeshBasicMaterial({color:0xFFD600});
+
+    // CAB
+    const cab=new THREE.Group();
+    // Main body
+    cab.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(3.8,2.6,2.2),bodyMat),{position:{x:0,y:1.3,z:0}}));
+    // Sleeper
+    const sl=new THREE.Mesh(new THREE.BoxGeometry(1.4,2.4,2.1),bodyMat);sl.position.set(-1.8,1.3,0);cab.add(sl);
+    // Deflector
+    const def=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.5,2.2),bodyMat);def.position.set(0.4,2.65,0);cab.add(def);
+    // Hood
+    const hood=new THREE.Mesh(new THREE.BoxGeometry(2.0,1.1,2.1),bodyMat);hood.position.set(1.8,0.75,0);cab.add(hood);
+    // Bumper
+    const bump=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.7,2.4),chrome);bump.position.set(2.9,0.45,0);cab.add(bump);
+    // Windshield
+    const ws=new THREE.Mesh(new THREE.BoxGeometry(0.12,1.6,1.9),glass);ws.position.set(1.0,1.55,0);cab.add(ws);
+    // Side windows
+    [-1.05,1.05].forEach(z=>{const sw=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.9,0.1),glass);sw.position.set(0.1,1.8,z);cab.add(sw);});
+    // Headlights
+    [-0.65,0.65].forEach(z=>{
+      const hl=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.25,0.35),yellowMat);hl.position.set(2.92,0.8,z);cab.add(hl);
+      const pl=new THREE.PointLight(0xFFD600,0.6,8);pl.position.set(3.5,0.8,z);cab.add(pl);
+    });
+    // Exhaust stacks
+    [-0.5,0.5].forEach(z=>{const ex=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,2.2,8),chrome);ex.position.set(-1.1,2.5,z*1.7);cab.add(ex);});
+    // Fuel tanks
+    [-0.9,0.9].forEach(z=>{const ft=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,1.4,10),chrome);ft.rotation.z=Math.PI/2;ft.position.set(-0.2,0.45,z);cab.add(ft);});
+    g.add(cab);
+    cab.position.x=7.5;
+
+    // TRAILER
+    const trailer=new THREE.Group();
+    const trMat=new THREE.MeshLambertMaterial({color:0xd0d4de});
+    // Main body
+    trailer.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(13.5,2.8,2.4),trMat),{position:{x:0,y:1.5,z:0}}));
+    // Rear door
+    const rear=new THREE.Mesh(new THREE.BoxGeometry(0.12,2.8,2.4),new THREE.MeshLambertMaterial({color:0xb0b4c0}));rear.position.set(-6.8,1.5,0);trailer.add(rear);
+    // Brake lights
+    [-0.8,0.8].forEach(z=>{const bl=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.28,0.35),redMat);bl.position.set(-6.82,1.2,z);trailer.add(bl);});
+    // Side skirts
+    [-1.22,1.22].forEach(z=>{const sk=new THREE.Mesh(new THREE.BoxGeometry(10,0.18,0.08),new THREE.MeshLambertMaterial({color:0x888898}));sk.position.set(0,0.18,z);trailer.add(sk);});
+    // Accent stripe
+    const stripe=new THREE.Mesh(new THREE.BoxGeometry(13.5,0.08,2.42),redMat);stripe.position.set(0,0.12,0);trailer.add(stripe);
+    g.add(trailer);
+    trailer.position.x=-3.0;
+
+    // Fifth wheel connector
+    const fw=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,0.3,8),chrome);fw.position.set(3.5,0.6,0);g.add(fw);
+
+    // WHEELS — 8 axle positions
+    const axles=[
+      {x:5.5,side:'cab'},{x:4.0,side:'cab'},
+      {x:-0.5,side:'tr'},{x:-2.0,side:'tr'},
+      {x:-3.8,side:'tr'},{x:-5.3,side:'tr'},
+      {x:-6.3,side:'tr'},{x:-7.5,side:'tr'}
+    ];
+    axles.forEach(a=>{
+      [-1.25,1.25].forEach(z=>{
+        const wg=new THREE.Group();
+        const tire=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.62,0.28,16),black);tire.rotation.x=Math.PI/2;
+        const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.3,16),chrome);rim.rotation.x=Math.PI/2;
+        const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.32,8),chrome);hub.rotation.x=Math.PI/2;
+        wg.add(tire,rim,hub);wg.position.set(a.x,0.62,z);g.add(wg);
+      });
+    });
+
+    return g;
+  }
+
+  // Truck configs
+  const truckConfigs=[
+    {bodyColor:0x0c1d34,x:-80,z:-6.5,speed:0.22},
+    {bodyColor:0x1a0c04,x:15,z:5.5,speed:0.18},
+    {bodyColor:0x04131e,x:-44,z:-0.5,speed:0.27}
+  ];
+
+  const trucks=truckConfigs.map(cfg=>{
+    const t=buildTruck(cfg.bodyColor);
+    t.position.set(cfg.x,0,cfg.z);
+    t.rotation.y=-Math.PI/2;
+    t.userData={speed:cfg.speed,baseY:0};
+    scene.add(t);
+    return t;
+  });
+
+  let heroT=0;
+  function animateHero(){
+    requestAnimationFrame(animateHero);
+    heroT+=0.016;
+    camera.position.y=11+Math.sin(heroT*0.4)*0.25;
+    trucks.forEach(t=>{
+      t.position.x+=t.userData.speed;
+      if(t.position.x>115)t.position.x=-115;
+      t.position.y=Math.sin(heroT*2+t.userData.speed*10)*0.04;
+    });
+    renderer.render(scene,camera);
+  }
+  animateHero();
+})();
+
+// ============================================================
+// ROUTE MAP CANVAS
+// ============================================================
+(function initMap(){
+  const wrap=document.querySelector('.tech-map-wrap');
+  const canvas=document.getElementById('map-canvas');
+  function resizeMap(){canvas.width=wrap.clientWidth;canvas.height=wrap.clientHeight;}
+  resizeMap();window.addEventListener('resize',resizeMap);
+
+  const nodes=[
+    {x:.08,y:.45,label:'EL PASO HQ',active:true},
+    {x:.28,y:.32,label:'CJ BORDER',active:false},
+    {x:.46,y:.62,label:'SAN ANTONIO',active:true},
+    {x:.66,y:.26,label:'DALLAS',active:false},
+    {x:.80,y:.56,label:'HOUSTON',active:true},
+    {x:.93,y:.38,label:'NEW ORLEANS',active:false}
+  ];
+  const routes=[[0,1],[1,2],[2,4],[1,3],[3,4],[4,5]];
+
+  const trucks=[];
+  routes.slice(0,4).forEach((r,i)=>{
+    trucks.push({routeIdx:i%routes.length,t:i*.25,speed:.003+i*.001});
+  });
+
+  let dashOffset=0,scanY=0;
+
+  function drawMap(){
+    requestAnimationFrame(drawMap);
+    const W=canvas.width,H=canvas.height;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#090B11';ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='rgba(255,214,0,0.05)';ctx.lineWidth=1;
+    for(let x=0;x<W;x+=38){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=38){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    dashOffset-=0.5;
+
+    // Routes
+    routes.forEach(r=>{
+      const a=nodes[r[0]],b=nodes[r[1]];
+      ctx.setLineDash([6,8]);ctx.lineDashOffset=dashOffset;
+      ctx.strokeStyle='rgba(232,0,10,0.35)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(a.x*W,a.y*H);ctx.lineTo(b.x*W,b.y*H);ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Nodes
+    nodes.forEach(n=>{
+      const nx=n.x*W,ny=n.y*H;
+      ctx.beginPath();ctx.arc(nx,ny,n.active?6:4,0,Math.PI*2);
+      ctx.fillStyle=n.active?'#E8000A':'rgba(232,0,10,0.4)';ctx.fill();
+      if(n.active){
+        ctx.beginPath();ctx.arc(nx,ny,10,0,Math.PI*2);
+        ctx.strokeStyle='rgba(232,0,10,0.3)';ctx.lineWidth=1;ctx.stroke();
+      }
+      ctx.fillStyle='rgba(255,214,0,0.85)';ctx.font=`500 ${Math.max(8,W*.018)}px IBM Plex Mono`;
+      ctx.fillText(n.label,nx+10,ny-6);
+    });
+
+    // Truck dots
+    trucks.forEach(tr=>{
+      tr.t+=tr.speed;if(tr.t>1)tr.t=0;
+      const r=routes[tr.routeIdx%routes.length];
+      const a=nodes[r[0]],b=nodes[r[1]];
+      const tx=a.x+(b.x-a.x)*tr.t,ty=a.y+(b.y-a.y)*tr.t;
+      const px=tx*W,py=ty*H;
+      const pulse=Math.sin(Date.now()*.004+tr.t*10)*.5+.5;
+      ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fillStyle='#E8000A';ctx.fill();
+      ctx.beginPath();ctx.arc(px,py,6+pulse*3,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(232,0,10,${0.4-pulse*0.2})`;ctx.lineWidth=1;ctx.stroke();
+    });
+
+    // Scan line
+    scanY+=H/220;if(scanY>H)scanY=0;
+    const sg=ctx.createLinearGradient(0,scanY-8,0,scanY+8);
+    sg.addColorStop(0,'transparent');sg.addColorStop(.5,'rgba(255,214,0,0.08)');sg.addColorStop(1,'transparent');
+    ctx.fillStyle=sg;ctx.fillRect(0,scanY-8,W,16);
+
+    // Corner brackets
+    const bs=12,bw=1.5;
+    ctx.strokeStyle='rgba(255,214,0,0.5)';ctx.lineWidth=bw;
+    [[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(([x,y,dx,dy])=>{
+      ctx.beginPath();ctx.moveTo(x+dx*bs,y);ctx.lineTo(x,y);ctx.lineTo(x,y+dy*bs);ctx.stroke();
+    });
+
+    // Bottom HUD bar
+    ctx.fillStyle='rgba(9,11,17,0.8)';ctx.fillRect(0,H-28,W,28);
+    ctx.fillStyle='rgba(255,214,0,0.7)';ctx.font=`${Math.max(7,W*.014)}px IBM Plex Mono`;
+    ctx.fillText('GPS: 12 SATELLITES  |  ELP→DAL: 632 MI  |  ETA: 09:42 CST',10,H-10);
+  }
+  drawMap();
+})();
+
+// ============================================================
+// FLEET THREE.JS VIEWER
+// ============================================================
+(function initFleet(){
+  const canvas=document.getElementById('fleet-canvas');
+  const wrap=document.querySelector('.fleet-canvas-wrap');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setClearColor(0x0D0F16);
+
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(45,canvas.clientWidth/canvas.clientHeight,0.1,200);
+  camera.position.set(0,8,24);camera.lookAt(0,2,0);
+
+  function resizeFleet(){
+    const w=wrap.clientWidth,h=wrap.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h;camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize',resizeFleet);resizeFleet();
+
+  // Lighting
+  scene.add(new THREE.AmbientLight(0x1a1b22,4));
+  const kl=new THREE.DirectionalLight(0xfff4e0,1.2);kl.position.set(6,12,8);scene.add(kl);
+  const rl=new THREE.DirectionalLight(0xE8000A,0.8);rl.position.set(-8,4,-6);scene.add(rl);
+  const yl=new THREE.DirectionalLight(0xFFD600,0.4);yl.position.set(4,2,10);scene.add(yl);
+
+  // Floor
+  const floorMat=new THREE.MeshLambertMaterial({color:0x080a10});
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(60,60),floorMat);
+  floor.rotation.x=-Math.PI/2;floor.position.y=-0.01;scene.add(floor);
+  // Floor grid lines
+  for(let i=-5;i<=5;i++){
+    const lm=new THREE.MeshBasicMaterial({color:0xE8000A,transparent:true,opacity:.07});
+    const lh=new THREE.Mesh(new THREE.BoxGeometry(60,0.01,0.04),lm);lh.position.set(0,0,i*2.5);scene.add(lh);
+    const lv=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.01,60),lm);lv.position.set(i*2.5,0,0);scene.add(lv);
+  }
+
+  // Truck builder (same as hero but single unit)
+  function buildFleetTruck(type){
+    const g=new THREE.Group();
+    const chrome=new THREE.MeshLambertMaterial({color:0xaaaaaa});
+    const black=new THREE.MeshLambertMaterial({color:0x111111});
+    const glass=new THREE.MeshLambertMaterial({color:0x1a3a5c,transparent:true,opacity:.6});
+    const redMat=new THREE.MeshBasicMaterial({color:0xE8000A});
+    const yellowMat=new THREE.MeshBasicMaterial({color:0xFFD600});
+
+    const cabColors=[0x0c1d34,0x2a1808,0x0a1e0a,0x1c1400];
+    const bodyMat=new THREE.MeshLambertMaterial({color:cabColors[type]});
+
+    // CAB
+    const cab=new THREE.Group();
+    cab.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(3.8,2.6,2.2),bodyMat),{position:{x:0,y:1.3,z:0}}));
+    const sl=new THREE.Mesh(new THREE.BoxGeometry(1.4,2.4,2.1),bodyMat);sl.position.set(-1.8,1.3,0);cab.add(sl);
+    const def=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.5,2.2),bodyMat);def.position.set(0.4,2.65,0);cab.add(def);
+    const hood=new THREE.Mesh(new THREE.BoxGeometry(2.0,1.1,2.1),bodyMat);hood.position.set(1.8,0.75,0);cab.add(hood);
+    const bump=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.7,2.4),chrome);bump.position.set(2.9,0.45,0);cab.add(bump);
+    const ws=new THREE.Mesh(new THREE.BoxGeometry(0.12,1.6,1.9),glass);ws.position.set(1.0,1.55,0);cab.add(ws);
+    [-1.05,1.05].forEach(z=>{const sw=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.9,0.1),glass);sw.position.set(0.1,1.8,z);cab.add(sw);});
+    [-0.65,0.65].forEach(z=>{
+      const hl=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.25,0.35),yellowMat);hl.position.set(2.92,0.8,z);cab.add(hl);
+    });
+    [-0.5,0.5].forEach(z=>{const ex=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,2.2,8),chrome);ex.position.set(-1.1,2.5,z*1.7);cab.add(ex);});
+    [-0.9,0.9].forEach(z=>{const ft=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,1.4,10),chrome);ft.rotation.z=Math.PI/2;ft.position.set(-0.2,0.45,z);cab.add(ft);});
+    cab.position.x=7.5;g.add(cab);
+
+    // TRAILER by type
+    const trailer=new THREE.Group();
+    if(type===0){
+      // Dry Van
+      const trMat=new THREE.MeshLambertMaterial({color:0xd0d4de});
+      trailer.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(13.5,2.8,2.4),trMat),{position:{x:0,y:1.5,z:0}}));
+      const rear=new THREE.Mesh(new THREE.BoxGeometry(0.12,2.8,2.4),new THREE.MeshLambertMaterial({color:0xb0b4c0}));rear.position.set(-6.8,1.5,0);trailer.add(rear);
+      [-0.8,0.8].forEach(z=>{const bl=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.28,0.35),redMat);bl.position.set(-6.82,1.2,z);trailer.add(bl);});
+      const stripe=new THREE.Mesh(new THREE.BoxGeometry(13.5,0.08,2.42),redMat);stripe.position.set(0,0.12,0);trailer.add(stripe);
+    } else if(type===1){
+      // Flatbed
+      const fbMat=new THREE.MeshLambertMaterial({color:0x888070});
+      trailer.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(13.5,0.3,2.4),fbMat),{position:{x:0,y:.25,z:0}}));
+      // Cargo boxes
+      const cMat=new THREE.MeshLambertMaterial({color:0x5a4030});
+      [-3,-1,1,3].forEach(x=>{
+        const c=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.4,2.1),cMat);c.position.set(x,1.0,0);trailer.add(c);
+        // Strap
+        const sM=new THREE.MeshBasicMaterial({color:0xE86000});
+        const s=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.05,0.04),sM);s.position.set(x,1.5,1.1);trailer.add(s);
+      });
+      [-0.8,0.8].forEach(z=>{const bl=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.28,0.35),redMat);bl.position.set(-6.82,0.4,z);trailer.add(bl);});
+    } else if(type===2){
+      // Reefer
+      const rfMat=new THREE.MeshLambertMaterial({color:0xc8d8cc});
+      trailer.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(13.5,2.8,2.4),rfMat),{position:{x:0,y:1.5,z:0}}));
+      // Reefer unit
+      const ru=new THREE.Mesh(new THREE.BoxGeometry(1.2,1.4,2.2),new THREE.MeshLambertMaterial({color:0x607868}));ru.position.set(6.2,2.0,0);trailer.add(ru);
+      const rear=new THREE.Mesh(new THREE.BoxGeometry(0.12,2.8,2.4),new THREE.MeshLambertMaterial({color:0xa8b8ac}));rear.position.set(-6.8,1.5,0);trailer.add(rear);
+      [-0.8,0.8].forEach(z=>{const bl=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.28,0.35),redMat);bl.position.set(-6.82,1.2,z);trailer.add(bl);});
+    } else {
+      // Step Deck
+      const sdMat=new THREE.MeshLambertMaterial({color:0x807860});
+      // Upper short deck
+      const upper=new THREE.Mesh(new THREE.BoxGeometry(5,0.3,2.4),sdMat);upper.position.set(4,1.5,0);trailer.add(upper);
+      // Lower long deck
+      const lower=new THREE.Mesh(new THREE.BoxGeometry(8.5,0.3,2.4),sdMat);lower.position.set(-2.5,0.8,0);trailer.add(lower);
+      // Step
+      const step=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.75,2.4),sdMat);step.position.set(1.6,1.0,0);trailer.add(step);
+      [-0.8,0.8].forEach(z=>{const bl=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.28,0.35),redMat);bl.position.set(-6.82,0.95,z);trailer.add(bl);});
+    }
+    trailer.position.x=-3.0;g.add(trailer);
+
+    // Fifth wheel
+    const fw=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,0.3,8),chrome);fw.position.set(3.5,0.6,0);g.add(fw);
+
+    // Wheels
+    const axles=[{x:5.5},{x:4.0},{x:-0.5},{x:-2.0},{x:-3.8},{x:-5.3},{x:-6.3},{x:-7.5}];
+    axles.forEach(a=>{
+      [-1.25,1.25].forEach(z=>{
+        const wg=new THREE.Group();
+        const tire=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.62,0.28,16),black);tire.rotation.x=Math.PI/2;
+        const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.3,16),chrome);rim.rotation.x=Math.PI/2;
+        const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.32,8),chrome);hub.rotation.x=Math.PI/2;
+        wg.add(tire,rim,hub);wg.position.set(a.x,0.62,z);g.add(wg);
+      });
+    });
+
+    return g;
+  }
+
+  let currentTruck=null;
+  let autoRot=true,isDragging=false,prevMX=0,truckRotY=0;
+  let fleetT=0;
+
+  function setTruck(type){
+    if(currentTruck)scene.remove(currentTruck);
+    currentTruck=buildFleetTruck(type);
+    currentTruck.rotation.y=-Math.PI/2+truckRotY;
+    scene.add(currentTruck);
+  }
+  setTruck(0);
+
+  // Tab clicks
+  document.getElementById('fleet-tabs').addEventListener('click',e=>{
+    const tab=e.target.closest('.fleet-tab');if(!tab)return;
+    document.querySelectorAll('.fleet-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    truckRotY=0;
+    setTruck(parseInt(tab.dataset.type));
+  });
+
+  // Drag
+  canvas.addEventListener('mousedown',e=>{isDragging=true;autoRot=false;prevMX=e.clientX;});
+  window.addEventListener('mouseup',()=>{isDragging=false;});
+  window.addEventListener('mousemove',e=>{
+    if(!isDragging)return;
+    truckRotY+=(e.clientX-prevMX)*0.01;
+    prevMX=e.clientX;
+    if(currentTruck)currentTruck.rotation.y=-Math.PI/2+truckRotY;
+  });
+  canvas.addEventListener('touchstart',e=>{isDragging=true;autoRot=false;prevMX=e.touches[0].clientX;});
+  canvas.addEventListener('touchend',()=>{isDragging=false;});
+  canvas.addEventListener('touchmove',e=>{
+    if(!isDragging)return;
+    truckRotY+=(e.touches[0].clientX-prevMX)*0.01;
+    prevMX=e.touches[0].clientX;
+    if(currentTruck)currentTruck.rotation.y=-Math.PI/2+truckRotY;
+  });
+
+  let fleetVisible=false;
+  const fleetObs=new IntersectionObserver(entries=>{fleetVisible=entries[0].isIntersecting;},{threshold:.1});
+  fleetObs.observe(wrap);
+
+  function animFleet(){
+    requestAnimationFrame(animFleet);
+    if(!fleetVisible)return;
+    fleetT+=0.016;
+    if(!isDragging&&autoRot)truckRotY+=0.004;
+    if(currentTruck){
+      currentTruck.rotation.y=-Math.PI/2+truckRotY;
+      currentTruck.position.y=Math.sin(fleetT*1.2)*0.05;
+    }
+    renderer.render(scene,camera);
+  }
+  animFleet();
+})();
+
+// ============================================================
+// GSAP SCROLL ANIMATIONS
+// ============================================================
+gsap.registerPlugin(ScrollTrigger);
+
+// Fade up
+document.querySelectorAll('[data-anim="fade"]').forEach(el=>{
+  gsap.from(el,{opacity:0,y:48,duration:.85,ease:'power3.out',
+    scrollTrigger:{trigger:el,start:'top 88%',toggleActions:'play none none none'}});
+});
+
+// Slide left
+document.querySelectorAll('[data-anim="rl"]').forEach(el=>{
+  gsap.from(el,{opacity:0,x:-48,duration:.85,ease:'power3.out',
+    scrollTrigger:{trigger:el,start:'top 88%',toggleActions:'play none none none'}});
+});
+
+// Slide right
+document.querySelectorAll('[data-anim="rr"]').forEach(el=>{
+  gsap.from(el,{opacity:0,x:48,duration:.85,ease:'power3.out',
+    scrollTrigger:{trigger:el,start:'top 88%',toggleActions:'play none none none'}});
+});
+
+// ============================================================
+// STAT COUNTERS
+// ============================================================
+document.querySelectorAll('.stat-card').forEach(card=>{
+  const target=parseInt(card.dataset.target);
+  const fmt=card.dataset.format;
+  const valEl=card.querySelector('.stat-val');
+  const barEl=card.querySelector('.stat-bar');
+  let triggered=false;
+
+  ScrollTrigger.create({
+    trigger:card,start:'top 85%',
+    onEnter:()=>{
+      if(triggered)return;triggered=true;
+      barEl.style.transform='scaleX(1)';
+      const start=performance.now();
+      const dur=2200;
+      function tick(){
+        const pct=Math.min((performance.now()-start)/dur,1);
+        const ease=1-Math.pow(1-pct,3);
+        const val=Math.round(target*ease);
+        if(fmt==='M'){
+          valEl.textContent=(val/1000000).toFixed(1)+'M';
+        } else {
+          valEl.textContent=val.toLocaleString();
+        }
+        if(pct<1)requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+  });
+});
+
+// ============================================================
+// FORM SUBMIT
+// ============================================================
+document.getElementById('quote-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const btn=e.target.querySelector('.btn-submit');
+  btn.textContent='REQUEST SENT ✓';
+  btn.style.background='#1a4a1a';
+  setTimeout(()=>{btn.textContent='SUBMIT REQUEST →';btn.style.background='';},3000);
+});
+</script>
+</body>
+</html>
